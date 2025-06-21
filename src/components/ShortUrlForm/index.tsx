@@ -52,11 +52,13 @@ export default function ShortUrlForm() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error ?? "Failed to create short URL");
-      }
-        const result = await response.json();      if (result.success) {
+      }        const result = await response.json();
+      
+      if (result.success) {
         // We know we're mounted here since the form can only be submitted client-side
         const baseUrl = window.location.origin;
-        const shortUrl = `${baseUrl}/${shortId}`;
+        // Use the /s/ prefix for shortlinks to match the route structure needed for Vercel
+        const shortUrl = `${baseUrl}/s/${shortId}`;
         console.log(`Created short URL: ${shortUrl} for ${validUrl}`);
         setShortUrl(shortUrl);
       } else {

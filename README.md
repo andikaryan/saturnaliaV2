@@ -35,8 +35,39 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy ke Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Untuk men-deploy aplikasi URL shortener ini ke Vercel, ikuti langkah-langkah berikut:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Pastikan Anda memiliki akun Vercel dan telah login
+2. Hubungkan repository Git Anda ke Vercel
+3. Konfigurasi deployment:
+   - Framework Preset: Next.js
+   - Root Directory: ./
+   - Build Command: `npm run build`
+   - Output Directory: .next
+4. Deploy!
+
+### Menggunakan Database Persisten (disarankan)
+
+Untuk environment production, sebaiknya gunakan database persisten seperti Vercel Postgres atau MongoDB:
+
+1. Buat database baru di Dashboard Vercel
+2. Tambahkan environment variable yang diperlukan 
+3. Perbarui implementasi `db.ts` dengan koneksi ke database persisten
+
+### Format URL Pendek
+
+URL pendek akan menggunakan format: `https://[your-domain]/s/[short-code]`
+
+- Dalam lingkungan development lokal: `http://localhost:3000/s/[short-code]`
+- Setelah di-deploy ke Vercel: `https://your-app.vercel.app/s/[short-code]`
+- Dengan domain kustom: `https://your-domain.com/s/[short-code]`
+
+### Mendapatkan Domain Kustom
+
+Untuk meningkatkan profesionalisme layanan URL shortener Anda:
+
+1. Beli domain melalui registrar domain (Namecheap, GoDaddy, dll.)
+2. Tambahkan domain ke project Vercel Anda
+3. Konfigurasikan DNS record untuk mengarahkan ke server Vercel
