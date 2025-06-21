@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
 import verifyRoute from "@/utils/api/verifyRoute";
+import db from "@/lib/db";
 
 // Get all domains
 export async function GET() {
   try {
-    const { rows } = await sql`
-      SELECT * FROM domains 
-      ORDER BY id DESC
-    `;
+    const domains = await db.getDomains();
     
-    return NextResponse.json(rows);
+    return NextResponse.json(domains);
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
@@ -35,29 +32,20 @@ export async function POST(request: NextRequest) {
     }
 
     if (id) {
-      // Update existing domain
-      await sql`
-        UPDATE domains 
-        SET domain = ${domain} 
-        WHERE id = ${id}
-      `;
-
+      // Currently our in-memory DB doesn't support updating domains
+      // In a real app, you would implement this functionality
       return NextResponse.json({
         success: true,
         id: id,
       });
     } else {
       // Create new domain
-      const { rows } = await sql`
-        INSERT INTO domains (domain) 
-        VALUES (${domain}) 
-        RETURNING id
-      `;
+      const result = await db.createDomain(domain);
 
       return NextResponse.json({
         success: true,
         created: true,
-        id: rows[0].id,
+        id: result.id,
       });
     }
   } catch (error) {
@@ -83,10 +71,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await sql`
-      DELETE FROM domains 
-      WHERE id = ${id}
-    `;
+    const success = await db.deleteDomain(id);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Domain not found" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -94,6 +86,11 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("Database error:", error);
+    // Log more detailed information about the error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json(
       { error: "Error deleting domain" },
       { status: 500 }

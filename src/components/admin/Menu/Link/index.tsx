@@ -5,13 +5,15 @@ import { Shortlink } from "@/types/shortlink.types";
 import { AdminContext } from "../../ShortlinksContainer";
 import { useElementPosition } from "@/hooks/useElementPosition";
 
-function LinkCard({ item }: { item: Shortlink }) {
+function LinkCard({ item }: Readonly<{ item: Shortlink }>) {
   const [/* position */, ref] = useElementPosition();
   const { revalidate, domains } = useContext(AdminContext);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(item);
 
-  const host = domains.find(d => d.id === item.domain_id) || { domain: window?.location?.origin || "localhost:3000" };
+  const host = domains.find(d => d.id === item.domain_id) || { 
+    domain: typeof window !== 'undefined' ? window.location.origin : "http://localhost:3000" 
+  };
 
   const copyToClipboard = async () => {
     try {

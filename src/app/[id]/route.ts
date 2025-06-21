@@ -1,5 +1,5 @@
-import { sql } from "@vercel/postgres";
 import { NextRequest, NextResponse } from "next/server";
+import db from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
@@ -12,13 +12,13 @@ export async function GET(
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    const { rows } = await sql`
-      SELECT longlink FROM shortlinks 
-      WHERE shortlink = ${id}
-    `;
-
-    if (rows.length > 0) {
-      return NextResponse.redirect(new URL(rows[0].longlink));
+    const link = await db.getShortlinkBySlug(id);
+    
+    if (link) {
+      // Update click count
+      await db.incrementClicks(id);
+      
+      return NextResponse.redirect(new URL(link.longlink));
     } else {
       return NextResponse.redirect(new URL("/", request.url));
     }

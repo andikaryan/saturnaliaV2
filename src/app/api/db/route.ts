@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
 import verifyRoute from "@/utils/api/verifyRoute";
+import db from "@/lib/db";
 
 // Get all shortlinks
 export async function GET() {
   try {
-    const { rows } = await sql`
-      SELECT * FROM shortlinks 
-      ORDER BY id DESC
-    `;
+    const shortlinks = await db.getShortlinks();
     
-    return NextResponse.json(rows);
+    return NextResponse.json(shortlinks);
   } catch (error) {
     console.error("Database error:", error);
     return NextResponse.json(
@@ -36,32 +33,34 @@ export async function POST(request: NextRequest) {
 
     if (id) {
       // Update existing shortlink
-      await sql`
-        UPDATE shortlinks 
-        SET longlink = ${longlink}, shortlink = ${shortlink}, domain_id = ${domain_id} 
-        WHERE id = ${id}
-      `;
+      const result = await db.updateShortlink({ id, shortlink, longlink, domain_id });
+
+      if (!result) {
+        return NextResponse.json(
+          { error: "Shortlink not found" },
+          { status: 404 }
+        );
+      }
 
       return NextResponse.json({
         success: true,
         id: id,
       });
-    } else {
-      // Create new shortlink
-      const { rows } = await sql`
-        INSERT INTO shortlinks (shortlink, longlink, domain_id) 
-        VALUES (${shortlink}, ${longlink}, ${domain_id}) 
-        RETURNING id
-      `;
+    } else {      // Create new shortlink
+      const result = await db.createShortlink({ shortlink, longlink, domain_id });
 
       return NextResponse.json({
         success: true,
         created: true,
-        id: rows[0].id,
+        id: result.id,
       });
-    }
-  } catch (error) {
+    }} catch (error) {
     console.error("Database error:", error);
+    // Log more detailed information about the error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json(
       { error: "Error creating or updating shortlink" },
       { status: 500 }
@@ -83,10 +82,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    await sql`
-      DELETE FROM shortlinks 
-      WHERE id = ${id}
-    `;
+    const success = await db.deleteShortlink(id);
+
+    if (!success) {
+      return NextResponse.json(
+        { error: "Shortlink not found" },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
@@ -94,6 +97,11 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error) {
     console.error("Database error:", error);
+    // Log more detailed information about the error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
     return NextResponse.json(
       { error: "Error deleting shortlink" },
       { status: 500 }

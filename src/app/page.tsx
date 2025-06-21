@@ -38,14 +38,23 @@ export default function Home() {
         body: JSON.stringify({
           shortlink: shortId,
           longlink: validUrl,
+          domain_id: null, // Using null for default domain
         }),
       });
       
       if (!response.ok) {
-        throw new Error("Failed to create short URL");
+        const errorData = await response.json();
+        throw new Error(errorData.error ?? "Failed to create short URL");
       }
       
-      setShortUrl(`${window.location.origin}/${shortId}`);
+      const result = await response.json();
+      if (result.success) {
+        // Use a function to safely access window
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+        setShortUrl(`${baseUrl}/${shortId}`);
+      } else {
+        throw new Error("Failed to create short URL");
+      }
     } catch (err) {
       setError("An error occurred. Please try again.");
       console.error(err);
