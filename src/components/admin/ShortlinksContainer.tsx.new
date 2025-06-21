@@ -6,7 +6,8 @@ import { Shortlink } from "@/types/shortlink.types";
 import useFetch from "@/hooks/useFetch";
 import { IDomain } from "@/types/domain.types";
 
-// Import komponen admin menu
+// Import setelah komponen dibuat
+// @ts-ignore - We'll handle this later
 import AdminMenu from "./ShortLink/index";
 
 type AdminContextType = {

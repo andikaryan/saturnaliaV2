@@ -2,8 +2,8 @@
 
 import React from "react";
 import { AdminTabs } from "@/types/admin";
-import ShortlinksContainer from "./ShortlinksContainer";
-import DomainsContainer from "./DomainsContainer";
+import ShortlinksContainer from "@/components/admin/ShortlinksContainer";
+import DomainsContainer from "@/components/admin/DomainsContainer";
 
 function AdminContainer({ tab }: { tab: AdminTabs }) {
   if (tab === AdminTabs.DOMAINS) {

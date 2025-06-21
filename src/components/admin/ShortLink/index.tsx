@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useContext, useEffect } from "react";
+import React, { useContext } from "react";
 import { useElementPosition } from "@/hooks/useElementPosition";
 import { AdminContext } from "../ShortlinksContainer";
-import LinkCard from "../Menu/Link";
+import LinkCard from "../Menu/Link/index";
 
 function AdminMenu() {
   const [position, ref] = useElementPosition();
@@ -17,9 +17,8 @@ function AdminMenu() {
         opacity: position.top ? 1 : 0,
       }}
     >
-      <div className="flex flex-col w-full gap-2 pt-2">
-        {data && data.length > 0 ? (
-          data.map((item, i) => <LinkCard key={i} item={item} />)
+      <div className="flex flex-col w-full gap-2 pt-2">        {data && data.length > 0 ? (
+          data.map((item) => <LinkCard key={item.id} item={item} />)
         ) : (
           <div className="text-center text-gray-500 dark:text-gray-400 py-8">
             No shortlinks created yet

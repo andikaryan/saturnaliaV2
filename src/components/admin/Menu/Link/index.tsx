@@ -6,7 +6,7 @@ import { AdminContext } from "../../ShortlinksContainer";
 import { useElementPosition } from "@/hooks/useElementPosition";
 
 function LinkCard({ item }: { item: Shortlink }) {
-  const [position, ref] = useElementPosition();
+  const [/* position */, ref] = useElementPosition();
   const { revalidate, domains } = useContext(AdminContext);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(item);
@@ -55,11 +55,11 @@ function LinkCard({ item }: { item: Shortlink }) {
     return (
       <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Short URL</label>
+          <div className="flex flex-col">            <label htmlFor="shortUrl" className="text-sm font-medium text-gray-700 dark:text-gray-300">Short URL</label>
             <div className="flex items-center gap-1">
               <span className="text-gray-500 dark:text-gray-400">{host.domain}/</span>
               <input
+                id="shortUrl"
                 className="flex-1 border rounded-md px-2 py-1 dark:bg-gray-700 dark:border-gray-600"
                 value={formData.shortlink}
                 onChange={e => setFormData({...formData, shortlink: e.target.value})}
@@ -67,9 +67,9 @@ function LinkCard({ item }: { item: Shortlink }) {
             </div>
           </div>
           
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Long URL</label>
+          <div className="flex flex-col">            <label htmlFor="longUrl" className="text-sm font-medium text-gray-700 dark:text-gray-300">Long URL</label>
             <textarea
+              id="longUrl"
               className="border rounded-md px-2 py-1 dark:bg-gray-700 dark:border-gray-600"
               value={formData.longlink}
               rows={3}
@@ -99,7 +99,7 @@ function LinkCard({ item }: { item: Shortlink }) {
   return (
     <div
       className="flex justify-between items-center p-3 bg-white dark:bg-gray-800 text-black dark:text-white rounded-md hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer hover:-translate-y-0.5"
-      ref={ref as any}
+      ref={ref as React.RefObject<HTMLDivElement>}
     >
       <div className="flex flex-col w-full">
         <div className="flex gap-2 items-center">
