@@ -6,20 +6,35 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const id = params.id;
+    const shortCode = params.id;
     
-    if (!id) {
+    if (!shortCode) {
+      console.error("No shortCode provided in slug");
       return NextResponse.redirect(new URL("/", request.url));
     }
 
-    const link = await db.getShortlinkBySlug(id);
+    // Log the request details
+    console.log(`Redirect request: URL=${request.url}, shortCode=${shortCode}`);
+    
+    // Look up the shortlink by the shortlink code, not by ID
+    const link = await db.getShortlinkBySlug(shortCode);
     
     if (link) {
-      // Update click count
-      await db.incrementClicks(id);
+      console.log(`Found link for ${shortCode}: ${JSON.stringify(link)}`);
       
-      return NextResponse.redirect(new URL(link.longlink));
+      // Update click count - use the shortlink code, not the ID
+      await db.incrementClicks(shortCode);
+      
+      // Make sure the longlink has a protocol
+      let targetUrl = link.longlink;
+      if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+        targetUrl = `https://${targetUrl}`;
+      }
+      
+      console.log(`Redirecting to: ${targetUrl}`);
+      return NextResponse.redirect(new URL(targetUrl));
     } else {
+      console.error(`No link found for shortCode: ${shortCode}`);
       return NextResponse.redirect(new URL("/", request.url));
     }
   } catch (error) {
