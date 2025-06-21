@@ -11,16 +11,17 @@ export async function GET(
     if (!shortCode) {
       console.error("No shortCode provided in slug");
       return NextResponse.redirect(new URL("/", request.url));
+    }    // Log the request details in development only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`Redirect request: URL=${request.url}, shortCode=${shortCode}`);
     }
-
-    // Log the request details
-    console.log(`Redirect request: URL=${request.url}, shortCode=${shortCode}`);
     
     // Look up the shortlink by the shortlink code
     const link = await db.getShortlinkBySlug(shortCode);
-    
-    if (link) {
-      console.log(`Found link for ${shortCode}: ${JSON.stringify(link)}`);
+      if (link) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Found link for ${shortCode}: ${JSON.stringify(link)}`);
+      }
       
       // Update click count
       await db.incrementClicks(shortCode);
@@ -31,14 +32,22 @@ export async function GET(
         targetUrl = `https://${targetUrl}`;
       }
       
-      console.log(`Redirecting to: ${targetUrl}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Redirecting to: ${targetUrl}`);
+      }
+      
       return NextResponse.redirect(new URL(targetUrl));
     } else {
-      console.error(`No link found for shortCode: ${shortCode}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(`No link found for shortCode: ${shortCode}`);
+      }
+      
       return NextResponse.redirect(new URL("/", request.url));
+    }  } catch (error) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("Error in redirect:", error);
     }
-  } catch (error) {
-    console.error("Error in redirect:", error);
+    
     return NextResponse.redirect(new URL("/", request.url));
   }
 }

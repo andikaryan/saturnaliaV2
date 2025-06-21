@@ -7,17 +7,26 @@ class InMemoryDB {
   private shortlinks: Shortlink[];
   private readonly domains: IDomain[];
   private shortlinkId: number;
-  private domainId: number;
-
-  constructor() {
-    // Initialize with default values or load from localStorage if available
-    let storedData;
+  private domainId: number;  constructor() {
+    // Initialize with default values
+    // In production/server environments, this will use default data
+    // In client environments, it will try to load from localStorage
+    let storedData: { 
+      shortlinks?: Shortlink[]; 
+      domains?: IDomain[]; 
+      shortlinkId?: number; 
+      domainId?: number 
+    } = {};
     
-    if (typeof window !== 'undefined') {
-      try {        storedData = JSON.parse(localStorage.getItem('saturnaliaDB') ?? '{}');
+    // Only try to access localStorage in browser environment
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        const savedData = localStorage.getItem('saturnaliaDB');
+        if (savedData) {
+          storedData = JSON.parse(savedData);
+        }
       } catch (e) {
         console.error('Failed to load data from localStorage', e);
-        storedData = {};
       }
     }
 
@@ -41,20 +50,20 @@ class InMemoryDB {
     ];
     
     this.shortlinkId = storedData?.shortlinkId ?? 1;
-    this.domainId = storedData?.domainId ?? 2;
-
-    // Log initial state
-    console.log('InMemoryDB initialized with:', {
-      shortlinks: this.shortlinks,
-      domains: this.domains,
-      shortlinkId: this.shortlinkId,
-      domainId: this.domainId
-    });
+    this.domainId = storedData?.domainId ?? 2;    // Log initial state in development only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('InMemoryDB initialized with:', {
+        shortlinks: this.shortlinks,
+        domains: this.domains,
+        shortlinkId: this.shortlinkId,
+        domainId: this.domainId
+      });
+    }
   }
-
   // Save current state to localStorage
   private persistData() {
-    if (typeof window !== 'undefined') {
+    // Only persist data in browser environment
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       try {
         localStorage.setItem('saturnaliaDB', JSON.stringify({
           shortlinks: this.shortlinks,
@@ -66,7 +75,7 @@ class InMemoryDB {
         console.error('Failed to save data to localStorage', e);
       }
     }
-  }  async getShortlinks() {
+  }async getShortlinks() {
     return [...this.shortlinks].sort((a, b) => parseInt(b.id) - parseInt(a.id));
   }
 
@@ -85,9 +94,11 @@ class InMemoryDB {
     };
     
     this.shortlinks.push(newShortlink);
-    
-    console.log(`DB: Created new shortlink: ${JSON.stringify(newShortlink)}`);
-    console.log(`DB: Current shortlinks: ${JSON.stringify(this.shortlinks)}`);
+      // Log in development only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`DB: Created new shortlink: ${JSON.stringify(newShortlink)}`);
+      console.log(`DB: Current shortlinks: ${JSON.stringify(this.shortlinks)}`);
+    }
     
     this.persistData();
     return { id: newShortlink.id };
@@ -114,22 +125,37 @@ class InMemoryDB {
     this.persistData();
     return true;
   }  async getShortlinkBySlug(shortlink: string) {
-    console.log(`DB: Looking for shortlink with slug: ${shortlink}`);
-    console.log(`DB: Available shortlinks: ${JSON.stringify(this.shortlinks)}`);
+    // Log in development only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`DB: Looking for shortlink with slug: ${shortlink}`);
+      console.log(`DB: Available shortlinks: ${JSON.stringify(this.shortlinks)}`);
+    }
+    
     const link = this.shortlinks.find(s => s.shortlink === shortlink);
-    console.log(`DB: Found link: ${JSON.stringify(link)}`);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`DB: Found link: ${JSON.stringify(link)}`);
+    }
+    
     return link ?? null;
   }
-
   async incrementClicks(shortlink: string) {
     const link = this.shortlinks.find(s => s.shortlink === shortlink);
     if (link) {
       link.clicks = (link.clicks ?? 0) + 1;
-      console.log(`DB: Incremented clicks for ${shortlink} to ${link.clicks}`);
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`DB: Incremented clicks for ${shortlink} to ${link.clicks}`);
+      }
+      
       this.persistData();
       return true;
     }
-    console.log(`DB: Failed to increment clicks for ${shortlink}, link not found`);
+    
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`DB: Failed to increment clicks for ${shortlink}, link not found`);
+    }
+    
     return false;
   }
 
