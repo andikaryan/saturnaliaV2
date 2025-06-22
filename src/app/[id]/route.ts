@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
+// Define the interface for params
+interface RouteParams {
+  params: {
+    id: string;
+  }
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: RouteParams
 ) {
   try {
     const shortCode = params.id;
