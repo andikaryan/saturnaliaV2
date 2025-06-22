@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 
-// Define params interface according to Next.js 15
-interface Params {
-  id: string;
-}
+// Force dynamic rendering to prevent static optimization issues on Vercel
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 // Follow the exact Next.js 15 pattern for route handlers
-export async function GET(request: NextRequest, { params }: { params: Params }) {
-  // Extract id directly without destructuring
-  const id = params.id;
+export async function GET(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
+  // Extract id directly from context.params
+  const id = context.params.id;
   
   try {
     
@@ -66,5 +68,3 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
     return NextResponse.redirect(new URL('/', request.url));
   }
 }
-
-export const dynamic = 'force-dynamic';

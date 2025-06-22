@@ -30,7 +30,7 @@ class InMemoryDB {
       this.domains = globalDomains || [
         {
           id: "1",
-          domain: "https://saturnalia-v2-gzr952ors-ryans-projects-0e6d0351.vercel.app",
+          domain: "https://saturnalia-v2.vercel.app/",
           created_at: new Date().toISOString()
         }
       ];
@@ -62,7 +62,7 @@ class InMemoryDB {
     ];
     
     // For production, use the Vercel deployment URL
-    const productionDomain = "https://saturnalia-v2-gzr952ors-ryans-projects-0e6d0351.vercel.app";
+    const productionDomain = "https://saturnalia-v2.vercel.app/";
     const localDomain = "http://localhost:3000";
     
     // Default domains with both localhost and production URL

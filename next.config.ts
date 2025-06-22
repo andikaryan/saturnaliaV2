@@ -1,5 +1,6 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   // Enable strict mode for development
   reactStrictMode: true,
   
@@ -11,20 +12,8 @@ const nextConfig = {
   // Disable x-powered-by header for security
   poweredByHeader: false,
   
-  // Required for Next.js App Router when deployed to Vercel
-  experimental: {
-    appDir: true,
-  },
-  
-  // Ensure dynamic routes work correctly with rewrites
-  async rewrites() {
-    return [
-      {
-        source: '/s/:id',
-        destination: '/s/:id',
-      }
-    ];
-  },
+  // Ensure public files are served correctly
+  trailingSlash: false,
   
   // CORS configuration
   async headers() {
@@ -40,18 +29,12 @@ const nextConfig = {
       },
     ];
   },
-    // Disable ESLint during build if build is failing
+  
+  // Disable ESLint during build if build is failing
   eslint: {
     // Warning: only set to false for deployment troubleshooting
     // We can re-enable this later after fixing all ESLint issues
     ignoreDuringBuilds: true,
-  },
-  
-  // Disable TypeScript type checking during build for deployment
-  typescript: {
-    // This is a temporary solution to bypass type checking issues
-    // We should fix the actual type issues later
-    ignoreBuildErrors: true,
   },
 };
 

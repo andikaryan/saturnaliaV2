@@ -9,7 +9,6 @@ export function middleware(request: NextRequest) {  // Get the host from the req
     // Extract the first part of the path for special slugs
   const pathSegments = pathname.split('/').filter(Boolean);
   const firstSegment = pathSegments[0] || '';
-
   // Check if the first segment is "s" (for shortened URLs)
   if (firstSegment === 's' && pathSegments.length > 1) {
     console.log('Detected shortlink path');
@@ -20,9 +19,9 @@ export function middleware(request: NextRequest) {  // Get the host from the req
     if (shortlinkId) {
       console.log(`Handling shortlink: ${shortlinkId}`);
       
-      // Rewrite to the dynamic route handler
-      const url = new URL(`/${shortlinkId}`, 'http://localhost:3000');
-      return NextResponse.rewrite(url);
+      // Let the route handler work correctly - no rewrite needed
+      // The /s/[id]/route.ts file should handle this
+      return NextResponse.next();
     }
   }
   
