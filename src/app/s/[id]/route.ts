@@ -14,29 +14,30 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
   try {
     
     if (!id) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('No id provided in slug');
-      }
+      // Always log in production
+      console.error('No id provided in slug');
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Redirect request: URL=${request.url}, id=${id}`);
-    }
+    // Always log request info, even in production
+    console.log(`[S] Redirect request: URL=${request.url}, id=${id}, isBrowser: ${typeof window !== 'undefined'}`);
+    console.log(`[S] Headers: ${JSON.stringify(Object.fromEntries(request.headers))}`);
+    console.log(`[S] URL origin: ${request.url}`);
+    console.log(`[S] Environment: ${process.env.NODE_ENV}`);
+    console.log(`[S] Is Server Component: ${typeof window === 'undefined'}`);
+    
     
     // Look up the shortlink by the shortlink code
     const link = await db.getShortlinkBySlug(id);
     
     if (!link) {
-      if (process.env.NODE_ENV !== 'production') {
-        console.error(`No link found for id: ${id}`);
-      }
+      // Always log in production
+      console.error(`[S] No link found for id: ${id}`);
       return NextResponse.redirect(new URL('/', request.url));
     }
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Found link for ${id}:`, link);
-    }
+    // Always log, even in production
+    console.log(`[S] Found link for ${id}:`, link);
     
     // Update click count
     await db.incrementClicks(id);
@@ -47,11 +48,16 @@ export async function GET(request: NextRequest, { params }: { params: Params }) 
       targetUrl = `https://${targetUrl}`;
     }
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`Redirecting to: ${targetUrl}`);
-    }
+    // Always log in production
+    console.log(`[S] Redirecting to: ${targetUrl}`);
     
-    return NextResponse.redirect(new URL(targetUrl));
+    try {
+      // Use direct URL object to avoid URL parsing issues
+      return NextResponse.redirect(targetUrl);
+    } catch (error) {
+      console.error('[S] Error redirecting:', error);
+      return NextResponse.redirect(new URL('/', request.url));
+    }
     
   } catch (error) {
     if (process.env.NODE_ENV !== 'production') {

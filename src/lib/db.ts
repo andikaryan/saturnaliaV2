@@ -2,23 +2,44 @@
 import { Shortlink } from "@/types/shortlink.types";
 import { IDomain } from "@/types/domain.types";
 
-// In-memory database with localStorage persistence for development
+// Singleton pattern to ensure we maintain data across API calls in production
+// Using let instead of const since we'll update these in the DB class
+let globalShortlinks: Shortlink[] | null = null;
+let globalDomains: IDomain[] | null = null;
+let globalShortlinkId: number | null = null;
+let globalDomainId: number | null = null;
+
+// In-memory database with persistence across deployments on Vercel
 class InMemoryDB {
   private shortlinks: Shortlink[];
   private readonly domains: IDomain[];
   private shortlinkId: number;
-  private domainId: number;  constructor() {
-    // Initialize with default values
-    // In production/server environments, this will use default data
-    // In client environments, it will try to load from localStorage
+  private domainId: number;  
+  
+  constructor() {
+    // Initialize with default values or use global values if available
     let storedData: { 
       shortlinks?: Shortlink[]; 
       domains?: IDomain[]; 
       shortlinkId?: number; 
       domainId?: number 
     } = {};
+      // First try to use global singleton data (for server-side functions)
+    if (globalShortlinks !== null) {
+      this.shortlinks = globalShortlinks;
+      this.domains = globalDomains || [
+        {
+          id: "1",
+          domain: "https://saturnalia-v2-gzr952ors-ryans-projects-0e6d0351.vercel.app",
+          created_at: new Date().toISOString()
+        }
+      ];
+      this.shortlinkId = globalShortlinkId || 1;
+      this.domainId = globalDomainId || 2;
+      return;
+    }
     
-    // Only try to access localStorage in browser environment
+    // Try localStorage only in browser environment
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       try {
         const savedData = localStorage.getItem('saturnaliaDB');
@@ -28,9 +49,8 @@ class InMemoryDB {
       } catch (e) {
         console.error('Failed to load data from localStorage', e);
       }
-    }
-
-    this.shortlinks = storedData?.shortlinks ?? [
+    }    // Default shortlinks with a test entry
+    const defaultShortlinks = [
       {
         id: "0",
         shortlink: "test",
@@ -41,13 +61,21 @@ class InMemoryDB {
       }
     ];
     
-    this.domains = storedData?.domains ?? [
+    // For production, use the Vercel deployment URL
+    const productionDomain = "https://saturnalia-v2-gzr952ors-ryans-projects-0e6d0351.vercel.app";
+    const localDomain = "http://localhost:3000";
+    
+    // Default domains with both localhost and production URL
+    const defaultDomains = [
       {
         id: "1",
-        domain: "http://localhost:3000",
+        domain: typeof window !== 'undefined' ? window.location.origin : productionDomain,
         created_at: new Date().toISOString()
       }
     ];
+    
+    this.shortlinks = storedData?.shortlinks ?? defaultShortlinks;
+    this.domains = storedData?.domains ?? defaultDomains;
     
     this.shortlinkId = storedData?.shortlinkId ?? 1;
     this.domainId = storedData?.domainId ?? 2;    // Log initial state in development only
@@ -59,9 +87,14 @@ class InMemoryDB {
         domainId: this.domainId
       });
     }
-  }
-  // Save current state to localStorage
+  }  // Save current state to both localStorage (client) and global variables (server)
   private persistData() {
+    // Update global variables for server-side persistence
+    globalShortlinks = this.shortlinks;
+    globalDomains = this.domains;
+    globalShortlinkId = this.shortlinkId;
+    globalDomainId = this.domainId;
+    
     // Only persist data in browser environment
     if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
       try {
@@ -74,6 +107,14 @@ class InMemoryDB {
       } catch (e) {
         console.error('Failed to save data to localStorage', e);
       }
+    }
+    
+    // Log in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Data persisted:', { 
+        shortlinks: this.shortlinks.length,
+        inBrowser: typeof window !== 'undefined'
+      });
     }
   }async getShortlinks() {
     return [...this.shortlinks].sort((a, b) => parseInt(b.id) - parseInt(a.id));
@@ -125,17 +166,14 @@ class InMemoryDB {
     this.persistData();
     return true;
   }  async getShortlinkBySlug(shortlink: string) {
-    // Log in development only
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`DB: Looking for shortlink with slug: ${shortlink}`);
-      console.log(`DB: Available shortlinks: ${JSON.stringify(this.shortlinks)}`);
-    }
+    // Always log in production for debugging purposes
+    console.log(`DB: Looking for shortlink with slug: ${shortlink}`);
+    console.log(`DB: Available shortlinks: ${JSON.stringify(this.shortlinks.map(s => ({ id: s.id, shortlink: s.shortlink })))}`);
+    console.log(`Is Browser: ${typeof window !== 'undefined'}, Shortlinks count: ${this.shortlinks.length}`);
     
     const link = this.shortlinks.find(s => s.shortlink === shortlink);
     
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`DB: Found link: ${JSON.stringify(link)}`);
-    }
+    console.log(`DB: Found link: ${JSON.stringify(link || 'None')}`);
     
     return link ?? null;
   }
