@@ -1,43 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db';
 
-interface RouteParams {
-  params: {
-    id: string;
-  };
+// Define params interface according to Next.js 15
+interface Params {
+  id: string;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+// Follow the exact Next.js 15 pattern for route handlers
+export async function GET(request: NextRequest, { params }: { params: Params }) {
+  // Extract id directly without destructuring
+  const id = params.id;
+  
   try {
-    const shortCode = params.id;
     
-    if (!shortCode) {
+    if (!id) {
       if (process.env.NODE_ENV !== 'production') {
-        console.error('No shortCode provided in slug');
+        console.error('No id provided in slug');
       }
       return NextResponse.redirect(new URL('/', request.url));
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`Redirect request: URL=${request.url}, shortCode=${shortCode}`);
+      console.log(`Redirect request: URL=${request.url}, id=${id}`);
     }
     
     // Look up the shortlink by the shortlink code
-    const link = await db.getShortlinkBySlug(shortCode);
+    const link = await db.getShortlinkBySlug(id);
     
     if (!link) {
       if (process.env.NODE_ENV !== 'production') {
-        console.error(`No link found for shortCode: ${shortCode}`);
+        console.error(`No link found for id: ${id}`);
       }
       return NextResponse.redirect(new URL('/', request.url));
     }
     
     if (process.env.NODE_ENV !== 'production') {
-      console.log(`Found link for ${shortCode}:`, link);
+      console.log(`Found link for ${id}:`, link);
     }
     
     // Update click count
-    await db.incrementClicks(shortCode);
+    await db.incrementClicks(id);
     
     // Make sure the longlink has a protocol
     let targetUrl = link.longlink;

@@ -1,28 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/lib/db";
 
+// Define params interface according to Next.js 15
+interface Params {
+  code: string;
+}
+
+// Follow the exact Next.js 15 pattern for route handlers
 export async function GET(
   request: NextRequest,
-  { params }: { params: { code: string } }
+  { params }: { params: Params }
 ) {
+  // Extract code directly without destructuring
+  const code = params.code;
+  
   try {
-    const shortCode = params.code;
-    
-    console.log(`API redirect called for code: ${shortCode}`);
-    
-    if (!shortCode) {
-      console.error("No shortCode provided");
+    console.log(`API redirect called for code: ${code}`);
+      if (!code) {
+      console.error("No code provided");
       return NextResponse.redirect(new URL("/", request.url));
     }
 
     // Look up the shortlink
-    const link = await db.getShortlinkBySlug(shortCode);
-    
-    if (link) {
-      console.log(`Found link for ${shortCode}: ${JSON.stringify(link)}`);
+    const link = await db.getShortlinkBySlug(code);
+      if (link) {
+      console.log(`Found link for ${code}: ${JSON.stringify(link)}`);
       
       // Update click count
-      await db.incrementClicks(shortCode);
+      await db.incrementClicks(code);
       
       // Make sure the longlink has a protocol
       let targetUrl = link.longlink;
@@ -31,9 +36,8 @@ export async function GET(
       }
       
       console.log(`Redirecting to: ${targetUrl}`);
-      return NextResponse.redirect(new URL(targetUrl));
-    } else {
-      console.error(`No link found for shortCode: ${shortCode}`);
+      return NextResponse.redirect(new URL(targetUrl));    } else {
+      console.error(`No link found for code: ${code}`);
       return NextResponse.redirect(new URL("/", request.url));
     }
   } catch (error) {
