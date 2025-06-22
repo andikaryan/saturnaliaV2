@@ -6,10 +6,10 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "routes": [
+  "rewrites": [
     {
-      "src": "/s/(.*)",
-      "dest": "/s/[id]"
+      "source": "/s/:path*",
+      "destination": "/s/:path*"
     }
   ]
 }
